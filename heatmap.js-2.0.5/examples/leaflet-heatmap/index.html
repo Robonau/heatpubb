@@ -54,8 +54,8 @@
       border: 1px solid rgba(0, 0, 0, .2);
     }
   </style>
-  <link rel="stylesheet" href="https://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
-  <script src="https://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-label@0.2.1-0/dist/leaflet.label.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/Robonau/heatpub@main/heatmap.js-2.0.5/build/heatmap.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/Robonau/heatpub@main/heatmap.js-2.0.5/plugins/leaflet-heatmap/leaflet-heatmap.js"></script>
@@ -116,7 +116,7 @@
 
       document.querySelector('#map').parentNode.insertBefore(newNode, document.querySelector('#map'));
 // long":-0.09063692784047911,"lat":51.51521706141179
-      var marker = new L.marker([51.51521706141179, -0.09063692784047911], { opacity: 0.01 });
+      let marker = new L.marker([51.51521706141179, -0.09063692784047911], { opacity: 0.01 });
       marker.bindLabel("My Label", {noHide: true, className: "my-label", offset: [0, 0] });
       marker.addTo(map);
 
