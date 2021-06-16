@@ -53,12 +53,25 @@
       line-height: 150%;
       border: 1px solid rgba(0, 0, 0, .2);
     }
+
+    .my-label {
+      position: absolute;
+      opacity: 0.1 !important;
+      pointer-events: auto !important;
+    }
+
+    .my-label:hover {
+      position: absolute;
+      opacity: 1 !important;
+    }
   </style>
-  <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
-  <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-label@0.2.1-0/dist/leaflet.label.min.js"></script>
   <script src="https://cdn.jsdelivr.net/gh/Robonau/heatpub@main/heatmap.js-2.0.5/build/heatmap.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/Robonau/heatpub@main/heatmap.js-2.0.5/plugins/leaflet-heatmap/leaflet-heatmap.js"></script>
+  <script
+    src="https://cdn.jsdelivr.net/gh/Robonau/heatpub@main/heatmap.js-2.0.5/plugins/leaflet-heatmap/leaflet-heatmap.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
 </head>
 
 <body>
@@ -66,10 +79,10 @@
   <script>
     window.onload = async function () {
 
-      let res = await fetch('https://raw.githubusercontent.com/Robonau/heatpub/main/heatmap.js-2.0.5/LAList.json')
+      const res = await fetch('https://raw.githubusercontent.com/Robonau/heatpub/main/heatmap.js-2.0.5/LAList.json')
       data = await res.json()
 
-      let testData = {
+      const testData = {
         max: 10000,
         data: data.map(ele => {
           return {
@@ -80,14 +93,14 @@
         })
       };
 
-      let baseLayer = L.tileLayer(
+      const baseLayer = L.tileLayer(
         'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
         maxZoom: 18
       }
       );
 
-      let cfg = {
+      const cfg = {
         // radius should be small ONLY if scaleRadius is true (or small radius is intended)
         "radius": 0.45,
         "maxOpacity": .8,
@@ -99,7 +112,7 @@
       };
 
 
-      let heatmapLayer = new HeatmapOverlay(cfg);
+      const heatmapLayer = new HeatmapOverlay(cfg);
 
       let map = new L.Map('map', {
         center: new L.LatLng(53, -2),
@@ -111,14 +124,35 @@
 
       layer = heatmapLayer;
 
-      let newNode = document.createElement('div')
+      const newNode = document.createElement('div')
       newNode.innerHTML = `<button id="all" onclick="allASL('count')">All</button><button id="State"onclick="allASL('countstate')">State</button><button id="Independent"onclick="allASL('countind')">Independent</button>`
 
       document.querySelector('#map').parentNode.insertBefore(newNode, document.querySelector('#map'));
-// long":-0.09063692784047911,"lat":51.51521706141179
-      let marker = new L.marker([51.51521706141179, -0.09063692784047911], { opacity: 0.01 });
-      marker.bindLabel("My Label", {noHide: true, className: "my-label", offset: [0, 0] });
-      marker.addTo(map);
+
+      marker = {}
+
+      ASLType = 'all'
+
+      data.forEach(ele => {
+        marker[ele.LA] = new L.marker([ele.lat, ele.long], { opacity: 0 });
+        marker[ele.LA].bindTooltip(`${ele.LA}`, { interactive: true, permanent: true, className: "my-label", id: ele.LA, offset: [0, 0] });//\nIndependent:${ele.countind}\nState:${ele.countstate}\nAll:${ele.count}
+        marker[ele.LA].addTo(map);
+        marker[ele.LA].on('click', markerClick)
+      })
+
+      map.doubleClickZoom.disable(); 
+
+      size()
+      function size() {
+        let newzoom = '' + (4 * (map.getZoom() - 6));
+        newzoom = newzoom < 10 ? 10 : newzoom;
+        console.log(newzoom)
+        $('#map .my-label').css({ 'font-size': newzoom + 'px' });
+      }
+
+      map.on('zoomend', function () {
+        size()
+      });
 
     };
   </script>
@@ -136,6 +170,28 @@
       };
 
       layer.setData(testData)
+      ASLType = ASL
+    }
+    function markerClick(e) {
+      toggle = typeof toggle == 'undefined' ? 1 : toggle >= 3 ? 0 : toggle + 1
+      console.log(e)
+      let id = e.target._tooltip.options.id
+      let stu = data.find(ele => ele.LA == id)
+      switch (toggle) {
+        case 0:
+          e.target._tooltip.setContent(`All:${stu.count}`)
+          break;
+        case 1:
+          e.target._tooltip.setContent(`State:${stu.countstate}`)
+          break;
+        case 2:
+          e.target._tooltip.setContent(`Independent:${stu.countind}`)
+          break;
+        case 3:
+          e.target._tooltip.setContent(`${stu.LA}`)
+          break;
+      }//\nIndependent:${stu.countind}\nState:${stu.countstate}\nAll:${stu.count}
+      preventDefault()
     }
   </script>
 </body>
