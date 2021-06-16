@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Leaflet Heatmap Layer Plugin</title>
+  <style>
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      font-family: sans-serif;
+    }
+
+    body * {
+      font-weight: 200;
+    }
+
+    h1 {
+      position: absolute;
+      background: white;
+      padding: 10px;
+    }
+
+    #map {
+      height: 100%;
+    }
+
+    .leaflet-container {
+      background: rgba(0, 0, 0, .8) !important;
+    }
+
+    h1 {
+      position: absolute;
+      background: black;
+      color: white;
+      padding: 10px;
+      font-weight: 200;
+      z-index: 10000;
+    }
+
+    #all-examples-info {
+      position: absolute;
+      background: white;
+      font-size: 16px;
+      padding: 20px;
+      top: 100px;
+      width: 350px;
+      line-height: 150%;
+      border: 1px solid rgba(0, 0, 0, .2);
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+  <script src="https://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-label@0.2.1-0/dist/leaflet.label.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/Robonau/heatmapss@main/heatmap.js-2.0.5/build/heatmap.js"></script>
+  <script src="https://cdn.jsdelivr.net/gh/Robonau/heatmapss@main/heatmap.js-2.0.5/plugins/leaflet-heatmap/leaflet-heatmap.js"></script>
+</head>
+
+<body>
+  <div id="map"></div>
+  <script>
+    window.onload = async function () {
+
+      let res = await fetch('https://raw.githubusercontent.com/Robonau/heatmapss/main/heatmap.js-2.0.5/LAList.json')
+      data = await res.json()
+
+      let testData = {
+        max: 10000,
+        data: data.map(ele => {
+          return {
+            count: ele.count,
+            long: ele.long,
+            lat: ele.lat
+          }
+        })
+      };
+
+      let baseLayer = L.tileLayer(
+        'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://cloudmade.com">CloudMade</a>',
+        maxZoom: 18
+      }
+      );
+
+      let cfg = {
+        // radius should be small ONLY if scaleRadius is true (or small radius is intended)
+        "radius": 0.45,
+        "maxOpacity": .8,
+        "scaleRadius": true,
+        "useLocalExtrema": true,
+        latField: 'lat',
+        lngField: 'long',
+        valueField: 'count'
+      };
+
+
+      let heatmapLayer = new HeatmapOverlay(cfg);
+
+      let map = new L.Map('map', {
+        center: new L.LatLng(53, -2),
+        zoom: 7,
+        layers: [baseLayer, heatmapLayer]
+      });
+
+      heatmapLayer.setData(testData);
+
+      layer = heatmapLayer;
+
+      let newNode = document.createElement('div')
+      newNode.innerHTML = `<button id="all" onclick="allASL('count')">All</button><button id="State"onclick="allASL('countstate')">State</button><button id="Independent"onclick="allASL('countind')">Independent</button>`
+
+      document.querySelector('#map').parentNode.insertBefore(newNode, document.querySelector('#map'));
+// long":-0.09063692784047911,"lat":51.51521706141179
+      var marker = new L.marker([51.51521706141179, -0.09063692784047911], { opacity: 0.01 });
+      marker.bindLabel("My Label", {noHide: true, className: "my-label", offset: [0, 0] });
+      marker.addTo(map);
+
+    };
+  </script>
+  <script>
+    async function allASL(ASL) {
+      let testData = {
+        max: 10000,
+        data: data.map(ele => {
+          return {
+            count: ele[ASL],
+            long: ele.long,
+            lat: ele.lat
+          }
+        })
+      };
+
+      layer.setData(testData)
+    }
+  </script>
+</body>
+
+</html>
