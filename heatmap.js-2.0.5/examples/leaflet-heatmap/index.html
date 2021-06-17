@@ -56,13 +56,26 @@
 
     .my-label {
       position: absolute;
-      opacity: 0.1 !important;
+      opacity: 0.5 !important;
       pointer-events: auto !important;
     }
 
     .my-label:hover {
       position: absolute;
       opacity: 1 !important;
+    }
+
+    #buttonContainer {
+      position: absolute;
+      z-index: 99999;
+      margin-left: 2%;
+      margin-top: 1.4%;
+    }
+
+    .ui-tooltip {
+      z-index: 99999;
+      margin-left: 2%;
+      margin-top: -1%;
     }
   </style>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
@@ -71,13 +84,23 @@
   <script src="https://cdn.jsdelivr.net/gh/Robonau/heatpub@main/heatmap.js-2.0.5/build/heatmap.js"></script>
   <script
     src="https://cdn.jsdelivr.net/gh/Robonau/heatpub@main/heatmap.js-2.0.5/plugins/leaflet-heatmap/leaflet-heatmap.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2.1/dist/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery-ui-dist@1.12.1/jquery-ui.js"></script>
 </head>
 
 <body>
+  <div id='buttonContainer'>
+    <button id="all" onclick="allASL('count')">All</button>
+    <button id="State" onclick="allASL('countstate')">State</button>
+    <button id="Independent" onclick="allASL('countind')">Independent</button>
+    <button id="labelsTogg" title="click on a label to cycle between La name, no. jobs, no. state, no. independant"
+      onclick="labelsTogg()">labels toggle</button>
+  </div>
   <div id="map"></div>
   <script>
     window.onload = async function () {
+
+      $('#labelsTogg').tooltip()
 
       const res = await fetch('https://raw.githubusercontent.com/Robonau/heatpub/main/heatmap.js-2.0.5/LAList.json')
       data = await res.json()
@@ -114,7 +137,7 @@
 
       const heatmapLayer = new HeatmapOverlay(cfg);
 
-      let map = new L.Map('map', {
+      map = new L.Map('map', {
         center: new L.LatLng(53, -2),
         zoom: 7,
         layers: [baseLayer, heatmapLayer]
@@ -124,23 +147,16 @@
 
       layer = heatmapLayer;
 
-      const newNode = document.createElement('div')
-      newNode.innerHTML = `<button id="all" onclick="allASL('count')">All</button><button id="State"onclick="allASL('countstate')">State</button><button id="Independent"onclick="allASL('countind')">Independent</button>`
-
-      document.querySelector('#map').parentNode.insertBefore(newNode, document.querySelector('#map'));
-
       marker = {}
-
       ASLType = 'all'
-
       data.forEach(ele => {
         marker[ele.LA] = new L.marker([ele.lat, ele.long], { opacity: 0 });
-        marker[ele.LA].bindTooltip(`${ele.LA}`, { interactive: true, permanent: true, className: "my-label", id: ele.LA, offset: [0, 0] });//\nIndependent:${ele.countind}\nState:${ele.countstate}\nAll:${ele.count}
+        marker[ele.LA].bindTooltip(`${ele.LA}`, { interactive: true, permanent: true, className: "my-label", id: ele.LA, offset: [0, 0] });
         marker[ele.LA].addTo(map);
         marker[ele.LA].on('click', markerClick)
       })
 
-      map.doubleClickZoom.disable(); 
+      map.doubleClickZoom.disable();
 
       size()
       function size() {
@@ -157,6 +173,20 @@
     };
   </script>
   <script>
+
+    function labelsTogg(e) {
+      togglee = typeof togglee == 'undefined' || !togglee ? 1 : 0
+      if (togglee) {
+        data.forEach(ele => {
+          map.removeLayer(marker[ele.LA])
+        })
+      } else {
+        data.forEach(ele => {
+          marker[ele.LA].addTo(map);
+        })
+      }
+    }
+
     async function allASL(ASL) {
       let testData = {
         max: 10000,
@@ -172,6 +202,7 @@
       layer.setData(testData)
       ASLType = ASL
     }
+
     function markerClick(e) {
       toggle = typeof toggle == 'undefined' ? 1 : toggle >= 3 ? 0 : toggle + 1
       console.log(e)
@@ -195,5 +226,4 @@
     }
   </script>
 </body>
-
 </html>
